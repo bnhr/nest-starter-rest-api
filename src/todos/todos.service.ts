@@ -50,8 +50,8 @@ export class TodosService {
 						details: `no todo with id of ${id}`,
 					})
 				}
+				throw e
 			}
-			throw e
 		}
 	}
 
@@ -67,8 +67,8 @@ export class TodosService {
 						details: `no todo with id of ${id}`,
 					})
 				}
+				throw e
 			}
-			throw e
 		}
 	}
 }
