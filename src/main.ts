@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import helmet from 'helmet'
+import { HttpExceptionFilter } from './utils/http-exception.filter'
+import { TransformInterceptor } from './utils/transform.interceptor'
 
 async function bootstrap() {
 	const PORT = parseInt(process.env.PORT) || 8080
@@ -14,6 +16,8 @@ async function bootstrap() {
 		credentials: true,
 		preflightContinue: true,
 	})
+	app.useGlobalFilters(new HttpExceptionFilter())
+	app.useGlobalInterceptors(new TransformInterceptor())
 	await app.listen(PORT)
 }
 bootstrap()
