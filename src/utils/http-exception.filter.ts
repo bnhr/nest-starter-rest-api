@@ -5,54 +5,42 @@ import {
 	HttpException,
 	HttpStatus,
 } from '@nestjs/common'
-import { Request, Response } from 'express'
-
-// Define a type for validation errors
-interface ValidationError {
-	field: string
-	errors: string
-}
-
-// Generic error response type
-interface ErrorResponse<T = null> {
-	status: 'error'
-	message: string
-	details?: T
-}
+import { Response } from 'express'
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
 	catch(exception: HttpException, host: ArgumentsHost) {
 		const ctx = host.switchToHttp()
 		const response = ctx.getResponse<Response>()
-		const request = ctx.getRequest<Request>()
-		console.log('🚀 ~ HttpExceptionFilter ~ request:', request)
 
 		const status =
 			exception instanceof HttpException
 				? exception.getStatus()
 				: HttpStatus.INTERNAL_SERVER_ERROR
 
-		const errorResponse: ErrorResponse<ValidationError[]> = {
+		// Get the raw exception response
+		const exceptionResponse = exception.getResponse()
+
+		const errorResponse = {
 			status: 'error',
-			message:
-				exception instanceof HttpException
-					? (exception.getResponse() as any).message
-					: 'Internal server error',
+			message: 'Validation failed',
+			details: [],
 		}
-
-		if (exception instanceof HttpException) {
-			const exceptionResponse = exception.getResponse() as any
-
-			if (exceptionResponse.details) {
-				errorResponse.details = exceptionResponse.details
-			}
-
-			if (status === HttpStatus.BAD_REQUEST || status === HttpStatus.CONFLICT) {
-				const validationErrors: ValidationError[] =
-					exceptionResponse.validationErrors || []
-				errorResponse.details = validationErrors
-			}
+		// If the exception has a details property (from Zod validation)
+		if (exceptionResponse && (exceptionResponse as any).details) {
+			errorResponse.details = (exceptionResponse as any).details
+		}
+		// Fallback for other types of validation errors
+		else if (
+			status === HttpStatus.BAD_REQUEST &&
+			Array.isArray((exceptionResponse as any).message)
+		) {
+			errorResponse.details = (exceptionResponse as any).message.map(
+				(msg: string) => ({
+					field: msg.split(' ')[0],
+					error: msg,
+				}),
+			)
 		}
 
 		response.status(status).json(errorResponse)

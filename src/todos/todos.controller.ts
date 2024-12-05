@@ -8,10 +8,12 @@ import {
 	Delete,
 	HttpCode,
 	HttpStatus,
+	UsePipes,
 } from '@nestjs/common'
 import { TodosService } from './todos.service'
-import { CreateTodoDto } from './dto/create-todo.dto'
 import { UpdateTodoDto } from './dto/update-todo.dto'
+import { CreateTodoDto, createTodoSchema } from './schema/todos.schema'
+import { ZodValidationPipe } from 'src/utils/validation.pipe'
 
 @Controller('todos')
 export class TodosController {
@@ -19,7 +21,8 @@ export class TodosController {
 
 	@Post()
 	@HttpCode(201)
-	create(@Body() createTodoDto: CreateTodoDto) {
+	@UsePipes(new ZodValidationPipe(createTodoSchema))
+	async create(@Body() createTodoDto: CreateTodoDto) {
 		this.todosService.create(createTodoDto)
 
 		return { httpStatus: HttpStatus.CREATED }
