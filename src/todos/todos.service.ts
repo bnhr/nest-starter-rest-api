@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { CreateTodoDto, UpdateTodoDto } from './schema/todos.schema'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class TodosService {
@@ -42,13 +43,15 @@ export class TodosService {
 				data: updateTodoDto,
 			})
 			return updatedTodo
-		} catch (error) {
-			if (error.code === 'P2025') {
-				throw new NotFoundException({
-					details: `no todo with id of ${id}`,
-				})
+		} catch (e) {
+			if (e instanceof Prisma.PrismaClientKnownRequestError) {
+				if (e.code === 'P2025') {
+					throw new NotFoundException({
+						details: `no todo with id of ${id}`,
+					})
+				}
 			}
-			throw error
+			throw e
 		}
 	}
 
@@ -57,13 +60,15 @@ export class TodosService {
 			return await this.prisma.todo.delete({
 				where: { id },
 			})
-		} catch (error) {
-			if (error.code === 'P2025') {
-				throw new NotFoundException({
-					details: `no todo with id of ${id}`,
-				})
+		} catch (e) {
+			if (e instanceof Prisma.PrismaClientKnownRequestError) {
+				if (e.code === 'P2025') {
+					throw new NotFoundException({
+						details: `no todo with id of ${id}`,
+					})
+				}
 			}
-			throw error
+			throw e
 		}
 	}
 }
