@@ -6,6 +6,7 @@ import {
 	HttpStatus,
 } from '@nestjs/common'
 import { Response } from 'express'
+import { getStatusText } from './status-text'
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -21,11 +22,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
 		// Get the raw exception response
 		const exceptionResponse = exception.getResponse()
 
-		const errorResponse = {
+		const errorResponse: {
+			status: 'error'
+			message?: string
+			details: string[]
+		} = {
 			status: 'error',
-			message: 'Validation failed',
+			message: getStatusText(exception.getStatus()),
 			details: [],
 		}
+
 		// If the exception has a details property (from Zod validation)
 		if (exceptionResponse && (exceptionResponse as any).details) {
 			errorResponse.details = (exceptionResponse as any).details

@@ -11,8 +11,11 @@ import {
 	UsePipes,
 } from '@nestjs/common'
 import { TodosService } from './todos.service'
-import { UpdateTodoDto } from './dto/update-todo.dto'
-import { CreateTodoDto, createTodoSchema } from './schema/todos.schema'
+import {
+	CreateTodoDto,
+	createTodoSchema,
+	UpdateTodoDto,
+} from './schema/todos.schema'
 import { ZodValidationPipe } from 'src/utils/validation.pipe'
 
 @Controller('todos')
@@ -23,32 +26,32 @@ export class TodosController {
 	@HttpCode(201)
 	@UsePipes(new ZodValidationPipe(createTodoSchema))
 	async create(@Body() createTodoDto: CreateTodoDto) {
-		this.todosService.create(createTodoDto)
+		const todo = await this.todosService.create(createTodoDto)
 
-		return { httpStatus: HttpStatus.CREATED }
+		return { data: todo, httpStatus: HttpStatus.CREATED }
 	}
 
 	@Get()
-	findAll() {
-		const todos = this.todosService.findAll()
+	async findAll() {
+		const todos = await this.todosService.findAll()
 		return { data: todos, httpStatus: HttpStatus.OK }
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: string) {
-		const todos = this.todosService.findOne(+id)
+	async findOne(@Param('id') id: string) {
+		const todos = await this.todosService.findOne(+id)
 		return { data: todos, httpStatus: HttpStatus.OK }
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateTodoDto: UpdateTodoDto) {
-		const todo = this.todosService.update(+id, updateTodoDto)
+	async update(@Param('id') id: string, @Body() updateTodoDto: UpdateTodoDto) {
+		const todo = await this.todosService.update(+id, updateTodoDto)
 		return { data: todo, httpStatus: HttpStatus.OK }
 	}
 
 	@Delete(':id')
-	remove(@Param('id') id: string) {
-		const todo = this.todosService.remove(+id)
+	async remove(@Param('id') id: string) {
+		const todo = await this.todosService.remove(+id)
 		return { data: todo, httpStatus: HttpStatus.OK }
 	}
 }
