@@ -9,13 +9,13 @@ export class TodosService {
 
 	async create(createTodoDto: CreateTodoDto) {
 		const { text, done } = createTodoDto
-		const newUser = await this.prisma.todo.create({
+		const newTodo = await this.prisma.todo.create({
 			data: {
 				text,
 				done,
 			},
 		})
-		return newUser
+		return newTodo
 	}
 
 	async findAll() {
