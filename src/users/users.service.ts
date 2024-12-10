@@ -76,6 +76,7 @@ export class UsersService {
 				id: true,
 				email: true,
 				username: true,
+				refreshToken: true,
 				role: true,
 			},
 		})
@@ -120,6 +121,70 @@ export class UsersService {
 					username: true,
 				},
 			})
+		} catch (e) {
+			if (e instanceof Prisma.PrismaClientKnownRequestError) {
+				if (e.code === 'P2025') {
+					throw new NotFoundException({
+						details: `no user with id of ${id}`,
+					})
+				}
+				throw e
+			}
+		}
+	}
+
+	async findByUsername(username: string) {
+		const user = await this.prisma.user.findUnique({
+			where: { username },
+			select: {
+				id: true,
+				email: true,
+				password: true,
+				username: true,
+				role: true,
+			},
+		})
+
+		if (!user) {
+			throw new NotFoundException({
+				details: `no user with username of ${username}`,
+			})
+		}
+		return user
+	}
+
+	async logout(id: string) {
+		try {
+			const findUser = await this.prisma.user.update({
+				where: { id },
+				data: {
+					refreshToken: null,
+				},
+				select: { id: true },
+			})
+			return findUser
+		} catch (e) {
+			if (e instanceof Prisma.PrismaClientKnownRequestError) {
+				if (e.code === 'P2025') {
+					throw new NotFoundException({
+						details: `no user with id of ${id}`,
+					})
+				}
+				throw e
+			}
+		}
+	}
+
+	async updateToken(id: string, refreshToken: string) {
+		try {
+			const findUser = await this.prisma.user.update({
+				where: { id },
+				data: {
+					refreshToken,
+				},
+				select: { id: true },
+			})
+			return findUser
 		} catch (e) {
 			if (e instanceof Prisma.PrismaClientKnownRequestError) {
 				if (e.code === 'P2025') {
