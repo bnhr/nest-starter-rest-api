@@ -4,8 +4,8 @@ import {
 	Get,
 	HttpCode,
 	HttpStatus,
-	Param,
 	Post,
+	Request,
 	UseGuards,
 	UsePipes,
 } from '@nestjs/common'
@@ -19,6 +19,7 @@ import {
 } from './schema/auth.schema'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { RefreshGuard } from './guards/refresh.guard'
+import RequestWithUser from 'src/utils/req-user'
 
 @Controller('auth')
 export class AuthController {
@@ -41,9 +42,9 @@ export class AuthController {
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('me/:username')
-	async me(@Param('username') username: string) {
-		const user = await this.authService.me(username)
+	@Get('me')
+	async me(@Request() req: RequestWithUser) {
+		const user = await this.authService.me(req.user)
 		return { data: user, httpStatus: HttpStatus.OK }
 	}
 

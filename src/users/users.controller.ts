@@ -50,6 +50,7 @@ export class UsersController {
 	@Roles(Role.ADMIN)
 	async findOne(@Param('id') id: string) {
 		const user = await this.usersService.findOne(id)
+		delete user.refreshToken
 		return { data: user, httpStatus: HttpStatus.OK }
 	}
 

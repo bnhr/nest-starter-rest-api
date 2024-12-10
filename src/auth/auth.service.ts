@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common'
 import { UsersService } from 'src/users/users.service'
 import { HashingService } from 'src/utils/hashing.service'
-import { RegisterDto } from './schema/auth.schema'
+import { LoginDto, RegisterDto } from './schema/auth.schema'
 import { JwtService } from '@nestjs/jwt'
+import { User } from '@prisma/client'
 
 @Injectable()
 export class AuthService {
@@ -38,7 +39,7 @@ export class AuthService {
 		return newUser
 	}
 
-	async login(user: any) {
+	async login(user: LoginDto) {
 		const usr = await this.user.findByUsername(user.username)
 		if (usr) {
 			const token = await this.createToken(usr.id, usr.username, usr.role)
@@ -47,8 +48,8 @@ export class AuthService {
 		}
 	}
 
-	async me(username: string) {
-		const usr = await this.user.findByUsername(username)
+	async me(user: User) {
+		const usr = await this.user.findByUsername(user.username)
 		delete usr.password
 		return usr
 	}
