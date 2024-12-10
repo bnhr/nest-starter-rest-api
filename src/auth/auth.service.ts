@@ -8,6 +8,7 @@ import { HashingService } from 'src/utils/hashing.service'
 import { LoginDto, RegisterDto } from './schema/auth.schema'
 import { JwtService } from '@nestjs/jwt'
 import { User } from '@prisma/client'
+import * as crypto from 'crypto'
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,16 @@ export class AuthService {
 		private hashing: HashingService,
 		private jwt: JwtService,
 	) {}
+
+	// Method to create a short, secure representation of the token
+	private createTokenFingerprint(token: string): string {
+		// Use SHA-256 to create a fixed-length representation
+		return crypto
+			.createHash('sha256')
+			.update(token)
+			.digest('hex')
+			.substring(0, 32) // Take first 32 characters for a shorter representation
+	}
 
 	async validateUser(username: string, password: string) {
 		const user = await this.user.findByUsername(username)
@@ -61,27 +72,30 @@ export class AuthService {
 
 	async refreshTokens(userId: string, refreshToken: string) {
 		const user = await this.user.findOne(userId)
+
 		if (!user || !user.refreshToken) {
 			throw new ForbiddenException({
 				details: 'Access Denied',
 			})
 		}
-		const refreshTokenMatches = await this.hashing.validateHash(
-			refreshToken,
-			user.refreshToken,
-		)
-		if (!refreshTokenMatches)
+
+		// Compare the fingerprint of the incoming token with stored token
+		const incomingTokenFingerprint = this.createTokenFingerprint(refreshToken)
+
+		if (incomingTokenFingerprint !== user.refreshToken) {
 			throw new ForbiddenException({
 				details: 'Invalid credential',
 			})
+		}
+
 		const tokens = await this.createToken(user.id, user.username, user.role)
 		await this.updateRefreshToken(user.id, tokens.refresh_token)
 		return tokens
 	}
 
 	async updateRefreshToken(id: string, refreshToken: string) {
-		const hashedRefreshToken = await this.hashing.createHash(refreshToken)
-		await this.user.updateToken(id, hashedRefreshToken)
+		const tokenFingerprint = this.createTokenFingerprint(refreshToken)
+		await this.user.updateToken(id, tokenFingerprint)
 	}
 
 	async createToken(id: string, username: string, role: string) {
