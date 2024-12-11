@@ -25,7 +25,7 @@ export class AuthService {
 			.createHash('sha256')
 			.update(token)
 			.digest('hex')
-			.substring(0, 32) // Take first 32 characters for a shorter representation
+			.substring(0, 32) // Take first 32 characters for a shorter representation of refresh token
 	}
 
 	async validateUser(username: string, password: string) {
