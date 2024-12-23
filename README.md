@@ -1,4 +1,4 @@
-# Nest.js REST API Starter (Work in Progress)
+# Nest.js REST API Starter
 
 A minimal starter template for building RESTful APIs with Nest.js, Prisma, and PostgreSQL.
 
